@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from common import import_data, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL
 
 
@@ -15,7 +16,7 @@ def forward_euler(S_init, I_init, R_init, beta, gamma, dt, duration):
     R = np.zeros(num_steps)
     
     # Set initial values
-    S[0], I[0], R_init = S_init, I_init, R_init
+    S[0], I[0], R[0] = S_init, I_init, R_init
     
     for t in range(num_steps - 1):
         S_rate = -(beta * S[t] * I[t]) / N
@@ -38,8 +39,22 @@ R_init = df[TOTAL_RECOVERIES_COL][0]
 I_init = df[TOTAL_INFECTIONS_COL][0]
 S_init = N - I_init
 
-S, I, R = forward_euler(S_init, I_init, R_init, beta, gamma, 0.01, 1000)
+print(R_init, I_init, S_init)
+
+S, I, R = forward_euler(S_init, I_init, R_init, beta, gamma, 0.001, 20)
+N = S + I + R
 
 # Print all 
-total = (S + I + R).astype(int)
-print(np.unique(total))
+# TODO: Show correct time in x axis
+plt.figure(figsize=(10, 6))
+plt.plot(S, marker="", linestyle="-")
+plt.plot(I, marker="", linestyle="-")
+plt.plot(R, marker="", linestyle="-")
+plt.legend(["Susceptable", "Infected", "Recovered"])
+plt.title("Total Population Size of Simulation")
+plt.xlabel("Time")
+plt.ylabel("Individuals")
+plt.ylim(0, N[0] * 1.1)  # Sets the bottom to 0 and top to 10% above N
+plt.xticks(rotation=45)
+plt.grid()
+plt.savefig("diagrams/population_size.png")
