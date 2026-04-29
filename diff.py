@@ -18,7 +18,7 @@ def derivative(data: np.ndarray):
     return derivative
 
 df =import_data()
-infection_rate = derivative(df[TOTAL_INFECTIONS_COL].values)
+infection_rate = derivative(df[INFECTED_COL].values)
 recovery_rate = derivative(df[TOTAL_RECOVERIES_COL].values)
 
 plt.figure(figsize=(10, 6))

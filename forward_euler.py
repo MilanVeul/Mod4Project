@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from common import import_data, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, DATE_COL
+from common import import_data,INFECTED_COL, TOTAL_RECOVERIES_COL, DATE_COL
 import pandas as pd
 
 
@@ -30,14 +30,14 @@ def forward_euler(S_init, I_init, R_init, beta, gamma, dt, duration):
     return S, I, R
 
 # As approximated in assignment 3
-beta = 0.8826642165086095
-gamma = 0.2501883071115894
+beta = 0.4195460684174166
+gamma = 0.2647898334098834
 dt = 0.001
 
 df = import_data()
 N_init = 1_000_000
 R_init = df[TOTAL_RECOVERIES_COL][0]
-I_init = df[TOTAL_INFECTIONS_COL][0]
+I_init = df[INFECTED_COL][0]
 S_init = N_init - I_init
 
 S, I, R = forward_euler(S_init, I_init, R_init, beta, gamma, dt, 20)
@@ -64,14 +64,14 @@ plt.savefig("diagrams/population_size.png")
 plt.figure(figsize=(10, 6))
 plt.plot(simulation_dates, I, marker="", linestyle="-")
 plt.plot(simulation_dates, R, marker="", linestyle="-")
-plt.plot(df["Date"], df[TOTAL_INFECTIONS_COL], marker="o", linestyle="-")
+plt.plot(df["Date"], df[INFECTED_COL], marker="o", linestyle="-")
 plt.plot(df["Date"], df[TOTAL_RECOVERIES_COL], marker="o", linestyle="-")
 plt.plot()
 plt.legend(["Simulated Infected", "Simulated Recovered", "Actual Infected", "Actual Recovered"])
 plt.title("Susceptable, Recovered and Infected Individuals over Time")
 plt.xlabel("Time")
 plt.ylabel("Individuals")
-plt.ylim(0, N[0] * 1.1)  # Sets the bottom to 0 and top to 10% above N
+# plt.ylim(0,  * 1.1)  # Sets the bottom to 0 and top to 10% above N
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.grid()
