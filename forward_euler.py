@@ -35,7 +35,7 @@ gamma = 0.2501883071115894
 dt = 0.001
 
 df = import_data()
-N_init = max(df[TOTAL_INFECTIONS_COL])
+N_init = 1_000_000
 R_init = df[TOTAL_RECOVERIES_COL][0]
 I_init = df[TOTAL_INFECTIONS_COL][0]
 S_init = N_init - I_init

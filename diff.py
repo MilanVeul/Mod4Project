@@ -32,7 +32,7 @@ plt.grid()
 plt.legend(["Infection rate", "Recovery rate"])
 plt.savefig("diagrams/approximation_derivative.png")
 
-N = max(df[TOTAL_INFECTIONS_COL])
+N = 1_000_000
 I = df[INFECTED_COL].values
 R = df[TOTAL_RECOVERIES_COL].values
 S = N - I
@@ -54,8 +54,8 @@ beta, gamma = res
 
 print(f"Beta: {beta}")
 print(f"Gamma: {gamma}")
-print(f"Mean approximation of gamma: {np.mean(recovery_rate / I)}")
 print(f"Median approximation of beta: {np.median((infection_rate + recovery_rate) * N / S / I)}")
+print(f"Mean approximation of gamma: {np.mean(recovery_rate / I)}")
 print(f"R_0: {beta / gamma}")
 
 plt.figure(figsize=(10, 6))
