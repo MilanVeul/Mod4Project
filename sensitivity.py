@@ -35,7 +35,7 @@ def get_peak(I):
 
 
 # As approximated in assignment 3
-dt = 0.01
+dt = 0.1
 df = import_data()
 N_init = 17_500_000
 R_init = 0
@@ -45,39 +45,25 @@ S_init = N_init - I_init
 beta = 0.420
 gamma = 0.265
 
-betas = np.arange(0.32, 0.53, 0.005)
-beta_peaks = []
-for beta_2 in betas:
-    S, I, R = forward_euler(S_init, I_init, R_init, beta_2, gamma, dt, 365)
-    beta_peaks.append(get_peak(I))
+step = 0.002
+beta_range = np.arange(0.32, 0.53, step)
+gamma_range = np.arange(0.165, 0.375, step)
+B, G = np.meshgrid(beta_range, gamma_range)
+Z = np.zeros(B.shape)
 
-gammas = np.arange(0.165, 0.375, 0.005)
-gamma_peaks = []
-for gamma_2 in gammas:
-    S, I, R = forward_euler(S_init, I_init, R_init, beta, gamma_2, dt, 365)
-    gamma_peaks.append(get_peak(I))
+# Fill Z matrix
+for i in range(len(gamma_range)):
+    for j in range(len(beta_range)):
+        _, I, _ = forward_euler(S_init, I_init, R_init, B[i,j], G[i,j], dt, 365)
+        Z[i,j] = get_peak(I)
 
-print(beta_peaks[20] - beta_peaks[19])
-print(gamma_peaks[1] - gamma_peaks[0])
-    
-# beta
-plt.figure(figsize=(10, 6))
-plt.plot(betas, beta_peaks, marker="o", linestyle="-")
-plt.title("Value of Beta vs Peak Infections ")
+# Plotting the Heatmap
+plt.figure(figsize=(10, 7))
+plt.pcolormesh(B, G, Z, shading='auto', cmap='magma')
+
+plt.colorbar(label='Peak Infections')
+plt.title("Peak Infections Sensitivity Analysis")
 plt.xlabel("Beta")
-plt.ylabel("Peak")
-plt.tight_layout()
-plt.grid()
-plt.savefig("diagrams/beta_sensitivity.png")
-
-
-# gamma
-plt.figure(figsize=(10, 6))
-plt.plot(gammas, gamma_peaks, marker="o", linestyle="-")
-plt.title("Value of Gamma vs Peak Infections ")
-plt.xlabel("Gamma")
-plt.ylabel("Peak")
-plt.tight_layout()
-plt.grid()
-plt.savefig("diagrams/gamma_sensitivity.png")
+plt.ylabel("Gamma")
+plt.savefig("diagrams/sensitivity.png")
 
