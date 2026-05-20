@@ -22,7 +22,7 @@ df = import_data()
 N = 1_000_000
 I = df[INFECTED_COL].values
 R = df[TOTAL_RECOVERIES_COL].values
-S = N - I
+S = N - I - R
 
 infection_rate = derivative(I)
 recovery_rate = derivative(R)
@@ -45,13 +45,18 @@ plt.savefig("diagrams/approximation_derivative.png")
 # A = [[S * I / N, -I], [0, I]]
 # x = [beta, gamma]
 
-A = np.vstack(
-    (np.column_stack((-S * I / N, np.zeros_like(I))),
+A = np.vstack((
+    np.column_stack((-S * I / N, np.zeros_like(I))),
     np.column_stack((S * I / N, -I)),
-    np.column_stack((np.zeros_like(I), I)))
-)
+    np.column_stack((np.zeros_like(I), I))
+))
 
-b = np.hstack((susceptible_rate, infection_rate, recovery_rate))
+b = np.hstack((
+    susceptible_rate,
+    infection_rate,
+    recovery_rate
+))
+
 res, residuals, _, _ = np.linalg.lstsq(A, b, rcond=None)
 beta, gamma = res
 
