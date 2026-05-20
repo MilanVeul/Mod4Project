@@ -58,12 +58,33 @@ for i in range(len(gamma_range)):
         Z[i,j] = get_peak(I)
 
 # Plotting the Heatmap
-plt.figure(figsize=(10, 7))
-plt.pcolormesh(B, G, Z, shading='auto', cmap='magma')
+# plt.figure(figsize=(10, 7))
+# plt.pcolormesh(B, G, Z, shading='auto', cmap='magma')
 
-plt.colorbar(label='Peak Infections')
-plt.title("Peak Infections Sensitivity Analysis")
-plt.xlabel("Beta")
-plt.ylabel("Gamma")
-plt.savefig("diagrams/sensitivity.png")
+# plt.colorbar(label='Peak Infections')
+# plt.title("Peak Infections Sensitivity Analysis")
+# plt.xlabel("Beta")
+# plt.ylabel("Gamma")
+# plt.savefig("diagrams/sensitivity.png")
+
+fig = plt.figure(figsize=(12, 8))
+ax = fig.add_subplot(111, projection="3d")
+
+# Plot the 3D surface
+surf = ax.plot_surface(B, G, Z, cmap="magma", edgecolor="none", antialiased=True)
+
+# Labels and Titles
+ax.set_title("Peak Infections Sensitivity Analysis (3D)")
+ax.set_xlabel("Beta")
+ax.set_ylabel("Gamma")
+ax.set_zlabel("Peak Infections")
+
+# Add a color bar for reference
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, label="Peak Infections")
+
+# Adjust the viewing angle if needed (elevation, azimuth)
+ax.view_init(elev=15, azim=45)
+
+plt.tight_layout()
+plt.savefig("diagrams/sensitivity_3d.png")
 
