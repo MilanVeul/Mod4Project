@@ -17,9 +17,16 @@ def derivative(data: np.ndarray):
 
     return derivative
 
-df =import_data()
-infection_rate = derivative(df[INFECTED_COL].values)
-recovery_rate = derivative(df[TOTAL_RECOVERIES_COL].values)
+df = import_data()
+
+N = 1_000_000
+I = df[INFECTED_COL].values
+R = df[TOTAL_RECOVERIES_COL].values
+S = N - I
+
+infection_rate = derivative(I)
+recovery_rate = derivative(R)
+susceptible_rate = derivative(S)
 
 plt.figure(figsize=(10, 6))
 plt.plot(df["Date"], infection_rate, marker="o", linestyle="-")
@@ -32,11 +39,6 @@ plt.grid()
 plt.legend(["Infection rate", "Recovery rate"])
 plt.savefig("diagrams/approximation_derivative.png")
 
-N = 1_000_000
-I = df[INFECTED_COL].values
-R = df[TOTAL_RECOVERIES_COL].values
-S = N - I
-
 # minimize |Ax - b|^2, where b = [infection_rate, recovery_rate]
 # infection_rate = beta / N * S * I - gamma * I
 # recovery_rate = gamma * I
@@ -44,11 +46,12 @@ S = N - I
 # x = [beta, gamma]
 
 A = np.vstack(
-    (np.column_stack((S * I / N, -I)),
+    (np.column_stack((-S * I / N, np.zeros_like(I))),
+    np.column_stack((S * I / N, -I)),
     np.column_stack((np.zeros_like(I), I)))
 )
 
-b = np.hstack((infection_rate, recovery_rate))
+b = np.hstack((susceptible_rate, infection_rate, recovery_rate))
 res, residuals, _, _ = np.linalg.lstsq(A, b, rcond=None)
 beta, gamma = res
 
@@ -60,7 +63,7 @@ print(f"R_0: {beta / gamma}")
 
 plt.figure(figsize=(10, 6))
 plt.plot(df["Date"], (A @ res - b)[:len(df)], marker="o", linestyle="-")
-plt.plot(df["Date"], (A @ res - b)[len(df):], marker="o", linestyle="-")
+# plt.plot(df["Date"], (A @ res - b)[len(df):], marker="o", linestyle="-")
 plt.title("Residuals of the least squares approximation")
 plt.xlabel("Date")
 plt.ylabel("Residual")
