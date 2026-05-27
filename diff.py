@@ -39,10 +39,11 @@ plt.grid()
 plt.legend(["Infection rate", "Recovery rate"])
 plt.savefig("diagrams/approximation_derivative.png")
 
-# minimize |Ax - b|^2, where b = [infection_rate, recovery_rate]
+# minimize |Ax - b|^2, where b = [susceptable_rate, infection_rate, recovery_rate]
+# susceptible_rate = -beta / N * S * I
 # infection_rate = beta / N * S * I - gamma * I
 # recovery_rate = gamma * I
-# A = [[S * I / N, -I], [0, I]]
+# A = [[-S * I / N, 0], [S * I / N, -I], [0, I]]
 # x = [beta, gamma]
 
 A = np.vstack((
@@ -51,12 +52,7 @@ A = np.vstack((
     np.column_stack((np.zeros_like(I), I))
 ))
 
-b = np.hstack((
-    susceptible_rate,
-    infection_rate,
-    recovery_rate
-))
-
+b = np.hstack((-infection_rate - recovery_rate, infection_rate, recovery_rate))
 res, residuals, _, _ = np.linalg.lstsq(A, b, rcond=None)
 beta, gamma = res
 
