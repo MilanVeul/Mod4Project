@@ -7,7 +7,7 @@ YEAR_COL = "YEAR"
 NEW_INFECTIONS_COL = "New Infections"
 TOTAL_INFECTIONS_COL = "Total Infections"
 
-def import_influenza_data(region) -> pd.DataFrame:
+def import_influenza_data(region, start_wk, start_yr, end_wk, end_yr) -> pd.DataFrame:
     cols = ["YEAR", "WEEK", "% WEIGHTED ILI", "ILITOTAL", "TOTAL PATIENTS", "REGION"]
 
     df = pd.read_csv("data/ILINet.csv", usecols=cols)
@@ -15,9 +15,14 @@ def import_influenza_data(region) -> pd.DataFrame:
     df = df.sort_values(by=["YEAR", "WEEK"]).reset_index(
         drop=True
     )
-    # Date column
-    # iso_week_string = region_df["YEAR"].astype(str) + "-W" + region_df["WEEK"].astype(str) + "-1"
-    # df[DATE_COL] = pd.to_datetime(iso_week_string, format="%G-W%V-%u")
+
+    df["EPI_SCORE"] = df["YEAR"] * 100 + df["WEEK"]
+    start_score = start_yr * 100 + start_wk
+    end_score = end_yr * 100 + end_wk
+    df = df[
+        (df["EPI_SCORE"] >= start_score)
+        & (df["EPI_SCORE"] <= end_score)
+    ]
 
     df[DATE_COL] = df.apply(
         lambda row: pd.to_datetime(
