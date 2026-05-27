@@ -48,14 +48,15 @@ N = S + I + R
 start_date = pd.to_datetime(df[DATE_COL].iloc[0])
 # Map simulation steps to days relative to start_date
 simulation_dates = start_date + pd.to_timedelta(np.arange(len(S)) * dt, unit='D')
+N_trend = N - np.mean(N)
 
 # Print all
 # plt.figure(figsize=(10, 6))
-# plt.plot(simulation_dates, N, marker="", linestyle="-")
-# plt.title("Total Population Size of Simulation")
+# plt.plot(simulation_dates, N_trend, marker="", linestyle="-")
+# plt.title("Population Change during Simulatioin")
 # plt.xlabel("Time")
 # plt.ylabel("Individuals")
-# plt.ylim(N[0] * 0.99, N[0] * 1.01)
+# plt.ylim(-0.2, 0.2)
 # plt.xticks(rotation=45)
 # plt.tight_layout()
 # plt.grid()
