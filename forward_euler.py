@@ -30,8 +30,8 @@ def forward_euler(S_init, I_init, R_init, beta, gamma, dt, duration):
     return S, I, R
 
 # As approximated in assignment 3
-beta = 0.4195460684174166
-gamma = 0.2647898334098834
+beta = 0.4195464445256309
+gamma = 0.26479002144073366
 dt = 0.1
 
 df = import_data()
@@ -77,4 +77,4 @@ plt.ylabel("Individuals")
 plt.xticks(rotation=45)
 plt.tight_layout()
 plt.grid()
-plt.savefig("diagrams/simulation_vs_actual.png")
+plt.savefig("diagrams/simulation_vs_actual_v2.png")
