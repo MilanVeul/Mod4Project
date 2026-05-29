@@ -1,9 +1,9 @@
-from common import import_data, NEW_INFECTIONS_COL, NEW_RECOVERIES_COL, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL
+from ..data.meridonia_data import import_meridonia_data, NEW_INFECTIONS_COL, NEW_RECOVERIES_COL, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-df = import_data()
+df = import_meridonia_data()
 
 plt.figure(figsize=(10, 6))
 plt.plot(df["Date"], df[NEW_INFECTIONS_COL], marker="o", linestyle="-")

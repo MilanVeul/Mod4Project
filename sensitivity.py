@@ -1,33 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from common import import_data,INFECTED_COL, TOTAL_RECOVERIES_COL, DATE_COL
-import pandas as pd
-
-
-def forward_euler(S_init, I_init, R_init, beta, gamma, dt, duration):
-    """
-    Solves the SIR model using Forward Euler method.
-    """
-    N = S_init + I_init + R_init
-    
-    num_steps = int(duration / dt)
-    S = np.zeros(num_steps)
-    I = np.zeros(num_steps)
-    R = np.zeros(num_steps)
-    
-    # Set initial values
-    S[0], I[0], R[0] = S_init, I_init, R_init
-    
-    for t in range(num_steps - 1):
-        S_rate = -(beta * S[t] * I[t]) / N
-        I_rate = (beta * S[t] * I[t]) / N - (gamma * I[t])
-        R_rate = gamma * I[t]
-        
-        S[t+1] = S[t] + dt*S_rate
-        I[t+1] = I[t] + dt*I_rate
-        R[t+1] = R[t] + dt*R_rate
-        
-    return S, I, R
+from common import import_data
+from forward_euler import forward_euler_sir
 
 
 def get_peak(I):
@@ -54,7 +28,7 @@ Z = np.zeros(B.shape)
 # Fill Z matrix
 for i in range(len(gamma_range)):
     for j in range(len(beta_range)):
-        _, I, _ = forward_euler(S_init, I_init, R_init, B[i,j], G[i,j], dt, 365)
+        _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i,j], G[i,j], dt, 365)
         Z[i,j] = get_peak(I)
 
 # Plotting the Heatmap
