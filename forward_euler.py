@@ -47,13 +47,15 @@ if __name__ == "__main__":
     dt = 0.1
     
     df = import_meridonia_data()
-    # N_init = 17_500_000
-    N_init = 1_000_000
-    R_init = df[TOTAL_RECOVERIES_COL][0]
-    I_init = df[INFECTED_COL][0]
+    N_init = 17_500_000
+    # N_init = 1_000_000
+    # R_init = df[TOTAL_RECOVERIES_COL][0]
+    # I_init = df[INFECTED_COL][0]
+    R_init = 0
+    I_init = 1
     S_init = N_init - I_init
     
-    S, I, R = forward_euler_sir(S_init, I_init, R_init, beta, gamma, dt, 20)
+    S, I, R = forward_euler_sir(S_init, I_init, R_init, beta, gamma, dt, 200)
     N = S + I + R
     
     # Generate Date Axis
@@ -75,19 +77,21 @@ if __name__ == "__main__":
     # plt.savefig("diagrams/population_size.png")
     
     
+    simulation_days = np.arange(len(S)) * dt
+    actual_days = (pd.to_datetime(df[DATE_COL]) - start_date).dt.total_seconds() / 86400.0
+
     plt.figure(figsize=(10, 6))
-    plt.plot(simulation_dates, I, color="C0", marker="", linestyle="-")
-    plt.plot(simulation_dates, R, color="C1", marker="", linestyle="-")
-    plt.plot(df["Date"], df[INFECTED_COL], color="C0", marker="o", linestyle="-")
-    plt.plot(df["Date"], df[TOTAL_RECOVERIES_COL], color="C1", marker="o", linestyle="-")
+    plt.plot(simulation_days, I, color="C0", marker="", linestyle="-")
+    plt.plot(simulation_days, R, color="C1", marker="", linestyle="-")
+    plt.plot(actual_days, df[INFECTED_COL], color="C0", marker="o", linestyle="-")
+    plt.plot(actual_days, df[TOTAL_RECOVERIES_COL], color="C1", marker="o", linestyle="-")
     plt.plot()
     plt.legend(["Simulated Infected", "Simulated Recovered", "Actual Infected", "Actual Recovered"])
     # plt.legend(["Simulated Infected", "Simulated Recovered"])
     plt.title("Susceptable, Recovered and Infected Individuals over Time")
-    plt.xlabel("Time")
+    plt.xlabel("Day")
     plt.ylabel("Individuals")
     # plt.ylim(0,  * 1.1)  # Sets the bottom to 0 and top to 10% above N
-    plt.xticks(rotation=45)
     plt.tight_layout()
     plt.grid()
     plt.savefig("diagrams/simulation_vs_actual_v2.png")
