@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from common import import_data
+from data.meridonia_data import import_meridonia_data
 from forward_euler import forward_euler_sir
 
 
@@ -10,7 +10,7 @@ def get_peak(I):
 
 # As approximated in assignment 3
 dt = 0.1
-df = import_data()
+df = import_meridonia_data()
 N_init = 17_500_000
 R_init = 0
 I_init = 1
@@ -19,7 +19,7 @@ S_init = N_init - I_init
 beta = 0.420
 gamma = 0.265
 
-step = 0.002
+step = 0.01
 beta_range = np.arange(0.32, 0.53, step)
 gamma_range = np.arange(0.165, 0.375, step)
 B, G = np.meshgrid(beta_range, gamma_range)
@@ -46,6 +46,8 @@ ax = fig.add_subplot(111, projection="3d")
 
 # Plot the 3D surface
 surf = ax.plot_surface(B, G, Z, cmap="magma", edgecolor="none", antialiased=True)
+# Add a color bar for reference
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, label="Peak Infections")
 
 # Labels and Titles
 ax.set_title("Peak Infections Sensitivity Analysis (3D)")
@@ -53,10 +55,17 @@ ax.set_xlabel("Beta")
 ax.set_ylabel("Gamma")
 ax.set_zlabel("Peak Infections")
 
-# Add a color bar for reference
-fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10, label="Peak Infections")
+beta_idx = np.argmin(np.abs(beta_range - beta))
+gamma_idx = np.argmin(np.abs(gamma_range - gamma))
+peak = Z[gamma_idx, beta_idx]
+print(peak)
+scat = ax.scatter(beta, gamma, peak, color="red", s=100, marker="o", label="Estimation", alpha=1.0, zorder=999)
+scat.set_depthshade(False)
+ax.legend()
 
-# Adjust the viewing angle if needed (elevation, azimuth)
+
+
+# Adjust the viewing angle if needed
 ax.view_init(elev=15, azim=45)
 
 plt.tight_layout()
