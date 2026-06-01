@@ -56,11 +56,12 @@ def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-0
             )[available_metrics].sum()
 
             # add column types
-            country_df[TOTAL_RECOVERIES_COL] = country_df["Recovered"] + country_df["Deaths"]
-            country_df[TOTAL_INFECTIONS_COL] = country_df["Confirmed"]
+            country_df[TOTAL_INFECTIONS_COL] = country_df["Confirmed"].astype(int)
+            country_df[TOTAL_RECOVERIES_COL] = country_df["Recovered"].astype(int) + country_df["Deaths"].astype(int)
+            country_df[INFECTED_COL] = country_df[TOTAL_INFECTIONS_COL] - country_df[TOTAL_RECOVERIES_COL]
 
             # remove all columns except useful ones
-            COLS_TO_KEEP = [DATE_COL, NEW_INFECTIONS_COL, NEW_RECOVERIES_COL, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL]
+            COLS_TO_KEEP = [DATE_COL, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL]
             country_df = country_df[
                 [col for col in COLS_TO_KEEP if col in country_df.columns]
             ]
@@ -69,6 +70,9 @@ def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-0
 
     if df_list:
         combined_df = pd.concat(df_list, ignore_index=True)
+        combined_df[NEW_INFECTIONS_COL] = combined_df[TOTAL_INFECTIONS_COL].diff().fillna(0).astype(int)
+        combined_df[NEW_RECOVERIES_COL] = combined_df[TOTAL_RECOVERIES_COL].diff().fillna(0).astype(int)
+
         print(f"Successfully combined {country} data! Total rows: {len(combined_df)}")
         print(combined_df)
         combined_df.to_csv(f"{country.lower()}_covid_data.csv", index=False)
