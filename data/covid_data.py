@@ -2,6 +2,12 @@ import os
 
 import pandas as pd
 
+DATE_COL = "Date"
+NEW_INFECTIONS_COL = "New Infections"
+NEW_RECOVERIES_COL = "New Recoveries"
+TOTAL_INFECTIONS_COL = "Total Infections"
+TOTAL_RECOVERIES_COL = "Total Recoveries"
+INFECTED_COL = "Infected"
 DATA_PATH = "csse_covid_19_data/csse_covid_19_daily_reports/"
 
 def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-07-31") -> pd.DataFrame:
@@ -40,26 +46,24 @@ def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-0
         if not country_df.empty:
             date_str = dt.strftime("%Y-%m-%d")
             country_df = country_df.copy()
-            country_df["Date"] = date_str
-
-            COLS_TO_KEEP = ["Confirmed", "Deaths", "Recovered"]
-            available_metrics = [
-                col for col in COLS_TO_KEEP if col in country_df.columns
-            ]
+            country_df[DATE_COL] = date_str
 
             # add all states if there are multiple rows for one country
+            METRIC_COLS = ["Confirmed", "Deaths", "Recovered"]
+            available_metrics = [col for col in METRIC_COLS if col in country_df.columns]
             country_df = country_df.groupby(
-                ["Date", country_col], as_index=False
+                [DATE_COL, country_col], as_index=False
             )[available_metrics].sum()
 
+            # add column types
+            country_df[TOTAL_RECOVERIES_COL] = country_df["Recovered"] + country_df["Deaths"]
+            country_df[TOTAL_INFECTIONS_COL] = country_df["Confirmed"]
+
             # remove all columns except useful ones
-            COLS_TO_KEEP = ["Date", "Confirmed", "Deaths", "Recovered"]
+            COLS_TO_KEEP = [DATE_COL, NEW_INFECTIONS_COL, NEW_RECOVERIES_COL, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL]
             country_df = country_df[
                 [col for col in COLS_TO_KEEP if col in country_df.columns]
             ]
-
-            # add removed col
-            country_df["Removed"] = country_df["Recovered"] + country_df["Deaths"]
 
             df_list.append(country_df)
 
