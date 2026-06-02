@@ -1,6 +1,9 @@
 import os
 
 import pandas as pd
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).parent
 
 DATE_COL = "Date"
 NEW_INFECTIONS_COL = "New Infections"
@@ -8,7 +11,7 @@ NEW_RECOVERIES_COL = "New Recoveries"
 TOTAL_INFECTIONS_COL = "Total Infections"
 TOTAL_RECOVERIES_COL = "Total Recoveries"
 INFECTED_COL = "Infected"
-DATA_PATH = "csse_covid_19_data/csse_covid_19_daily_reports/"
+DATA_PATH = SCRIPT_DIR / "csse_covid_19_data/csse_covid_19_daily_reports/"
 
 def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-07-31") -> pd.DataFrame:
     dates = pd.date_range(start=start_date, end=end_date, freq="D")
@@ -17,11 +20,10 @@ def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-0
 
     for dt in dates:
         filename = f"{dt.strftime('%m-%d-%Y')}.csv"
-        file_path = os.path.join(DATA_PATH, filename)
+        file_path = DATA_PATH / filename
 
-
-        if not os.path.exists(file_path):
-            print(f"Warning: {filename} not found.")
+        if not file_path.exists():
+            print(f"Warning: {file_path} not found.")
             continue
 
         df = pd.read_csv(file_path)
