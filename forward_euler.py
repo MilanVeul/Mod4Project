@@ -1,7 +1,7 @@
 from typing import Callable
 import numpy as np
 import matplotlib.pyplot as plt
-from data.meridonia_data import INFECTED_COL, TOTAL_RECOVERIES_COL, DATE_COL, NEW_INFECTIONS_COL
+from data.meridonia_data import INFECTED_COL, TOTAL_RECOVERIES_COL, DATE_COL
 import pandas as pd
 
 def general_forward_euler(initial: np.ndarray, design: Callable[[np.ndarray], np.ndarray], dt: float, duration: float) -> tuple[np.ndarray, np.ndarray]:
