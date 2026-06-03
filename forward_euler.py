@@ -1,7 +1,7 @@
 from typing import Callable
 import numpy as np
 import matplotlib.pyplot as plt
-from data.meridonia_data import import_meridonia_data, INFECTED_COL, TOTAL_RECOVERIES_COL, DATE_COL
+from data.meridonia_data import INFECTED_COL, TOTAL_RECOVERIES_COL, DATE_COL, NEW_INFECTIONS_COL
 import pandas as pd
 
 def general_forward_euler(initial: np.ndarray, design: Callable[[np.ndarray], np.ndarray], dt: float, duration: float) -> tuple[np.ndarray, np.ndarray]:
@@ -12,8 +12,7 @@ def general_forward_euler(initial: np.ndarray, design: Callable[[np.ndarray], np
     states = np.zeros((num_steps, len(initial)))
     rates = np.zeros((num_steps - 1, len(initial)))
 
-    for j in range(len(initial)):
-        states[0][j] = initial[j]
+    states[0] = initial
     
     for t in range(num_steps - 1):
         derivative = design(states[t])
@@ -21,6 +20,25 @@ def general_forward_euler(initial: np.ndarray, design: Callable[[np.ndarray], np
         states[t + 1] = states[t] + dt * derivative
         
     return states, rates
+
+def forward_euler_seir(S_init: float, E_init: float, I_init: float, R_init: float,
+                       beta: float, sigma: float, gamma: float,
+                       dt: float, duration: float) -> np.ndarray:
+    """
+    Solves the SEIR model using Forward Euler method.
+    """
+    N = S_init + E_init + I_init + R_init
+    initial = np.array([S_init, E_init, I_init, R_init])
+
+    def design(state: np.ndarray):
+        S, E, I, R = state
+        S_rate = -(beta * S * I) / N
+        E_rate = (beta * S * I) / N - sigma * E
+        I_rate = sigma * E - gamma * I
+        R_rate = gamma * I
+        return np.array([S_rate, E_rate, I_rate, R_rate])
+
+    return general_forward_euler(initial, design, dt, duration)[0].T
 
 def forward_euler_sir(S_init: float, I_init: float, R_init: float, beta: float, gamma: float, dt: float, duration: float) -> np.ndarray:
     """
@@ -40,23 +58,19 @@ def forward_euler_sir(S_init: float, I_init: float, R_init: float, beta: float, 
         
     return general_forward_euler(initial, design, dt, duration)[0].T
 
-if __name__ == "__main__":
-    # As approximated in assignment 3
-    beta = 0.4195464445256309
-    gamma = 0.26479002144073366
-    dt = 0.1
+def evaluate_seir_parameters(
+    df: pd.DataFrame,
+    S_init: float, I_init: float, R_init: float, E_init: float,
+    beta: float, gamma: float, sigma: float | None,
+    dt: float, duration: float=200
+):
+    E = 0
+    if sigma == 0.0 or sigma is None:
+        S, I, R = forward_euler_sir(S_init, I_init, R_init, beta, gamma, dt, duration)
+    else:
+        S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, duration)
     
-    df = import_meridonia_data()
-    N_init = 17_500_000
-    # N_init = 1_000_000
-    # R_init = df[TOTAL_RECOVERIES_COL][0]
-    # I_init = df[INFECTED_COL][0]
-    R_init = 0
-    I_init = 1
-    S_init = N_init - I_init
-    
-    S, I, R = forward_euler_sir(S_init, I_init, R_init, beta, gamma, dt, 200)
-    N = S + I + R
+    N = S + E + I + R
     
     # Generate Date Axis
     start_date = pd.to_datetime(df[DATE_COL].iloc[0])
@@ -76,9 +90,17 @@ if __name__ == "__main__":
     # plt.grid()
     # plt.savefig("diagrams/population_size.png")
     
-    
     simulation_days = np.arange(len(S)) * dt
     actual_days = (pd.to_datetime(df[DATE_COL]) - start_date).dt.total_seconds() / 86400.0
+
+    I_interp = np.interp(actual_days, simulation_days, I)
+    R_interp = np.interp(actual_days, simulation_days, R)
+
+    rmse_I = np.sqrt(np.mean((I_interp - df[INFECTED_COL])**2))
+    rmse_R = np.sqrt(np.mean((R_interp - df[TOTAL_RECOVERIES_COL])**2))
+
+    print(f"RMSE in simulated I vs actual I: {rmse_I}")
+    print(f"RMSE in simulated R vs actual R: {rmse_R}")
 
     plt.figure(figsize=(10, 6))
     plt.plot(simulation_days, I, color="C0", marker="", linestyle="-")

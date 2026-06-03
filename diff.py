@@ -1,6 +1,4 @@
-from data.meridonia_data import import_meridonia_data, TOTAL_RECOVERIES_COL, INFECTED_COL
 import numpy as np
-import matplotlib.pyplot as plt
 
 def forward_difference(data: np.ndarray, i: int):
     return data[i+1] - data[i]
@@ -16,53 +14,3 @@ def derivative(data: np.ndarray):
     derivative[len(data) - 1] = forward_difference(data, len(data) - 2)
 
     return derivative
-
-if __name__ == "__main__":
-    df = import_meridonia_data()
-
-    N = 1_000_000
-    I = df[INFECTED_COL].values
-    R = df[TOTAL_RECOVERIES_COL].values
-    S = N - I - R
-
-    infection_rate = derivative(I)
-    recovery_rate = derivative(R)
-    susceptible_rate = derivative(S)
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(df["Date"], infection_rate, marker="o", linestyle="-")
-    plt.plot(df["Date"], recovery_rate, marker="o", linestyle="-")
-    plt.title("Approximation of $\\frac{dI}{dt}$ and $\\frac{dR}{dt}$")
-    plt.xlabel("Date")
-    plt.ylabel("Rate of change")
-    plt.xticks(rotation=45)
-    plt.grid()
-    plt.legend(["Infection rate", "Recovery rate"])
-    plt.savefig("diagrams/approximation_derivative.png")
-
-    A = np.vstack((
-        np.column_stack((-S * I / N, np.zeros_like(I))),
-        np.column_stack((S * I / N, -I)),
-        np.column_stack((np.zeros_like(I), I))
-    ))
-
-    b = np.hstack((-infection_rate - recovery_rate, infection_rate, recovery_rate))
-    res, residuals, _, _ = np.linalg.lstsq(A, b, rcond=None)
-    beta, gamma = res
-
-    print(f"Beta: {beta}")
-    print(f"Gamma: {gamma}")
-    print(f"Median approximation of beta: {np.median((infection_rate + recovery_rate) * N / S / I)}")
-    print(f"Mean approximation of gamma: {np.mean(recovery_rate / I)}")
-    print(f"R_0: {beta / gamma}")
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(df["Date"], (A @ res - b)[:len(df)], marker="o", linestyle="-")
-    # plt.plot(df["Date"], (A @ res - b)[len(df):], marker="o", linestyle="-")
-    plt.title("Residuals of the least squares approximation")
-    plt.xlabel("Date")
-    plt.ylabel("Residual")
-    plt.xticks(rotation=45)
-    plt.grid()
-    plt.legend(["Infection rate residual", "Recovery rate residual"])
-    plt.savefig("diagrams/residuals.png")
