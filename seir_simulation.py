@@ -11,8 +11,8 @@ df = import_covid_data()
 sigma = 0.19
 
 N = 60_000_000
-I_init = 0.0001 * N
-E_init = 0.0001 * N
+I_init = 0.0015 * N
+E_init = 0.0008 * N
 R_init = 0.0
 S_init = N - I_init - E_init - R_init
 
@@ -32,7 +32,7 @@ def loss_function(params: np.ndarray) -> float:
     rmse_recoveries = np.sqrt(np.mean((df[TOTAL_RECOVERIES_COL] - R[::int(1 / dt)]) ** 2))
 
     loss = rmse_infections + rmse_recoveries
-    print(f"loss={loss:.4f}, beta={beta}, gamma={gamma}, scale={scale}")
+    # print(f"loss={loss:.4f}, beta={beta}, gamma={gamma}, scale={scale}")
     return loss
 
 # The optimization result represented as a OptimizeResult object.
@@ -52,13 +52,12 @@ result = minimize(
     )
 )
 
-beta, gamma, old_scale = result.x
+beta, gamma, scale = result.x
+print(f"beta={beta:.4f}, gamma={gamma:.4f}, scale={scale:.5f}")
 
 S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, duration)
-A, I_for_scale = df[INFECTED_COL], I[::int(1 / dt)]
-scale = np.dot(A, I_for_scale) / (np.linalg.norm(I_for_scale) ** 2)
-
-print(old_scale, scale)
+# A, I_for_scale = df[INFECTED_COL], I[::int(1 / dt)]
+# scale = np.dot(A, I_for_scale) / (np.linalg.norm(I_for_scale) ** 2)
 
 plt.figure(figsize=(10, 6))
 plt.plot(df[DATE_COL], df[INFECTED_COL], color="C0", marker="o", linestyle="-")
@@ -75,4 +74,4 @@ plt.grid()
 plt.savefig("diagrams/seir_fit_covid.png")
 print("Saved diagrams/seir_fit_covid.png", flush=True)
 
-evaluate_seir_parameters(df, S_init, I_init, 0, E_init, beta, gamma, sigma, 0.1)
+# evaluate_seir_parameters(df, S_init, I_init, 0, E_init, beta, gamma, sigma, 0.1)
