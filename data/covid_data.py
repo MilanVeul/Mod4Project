@@ -80,6 +80,9 @@ def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-0
         combined_df.to_csv(str(SCRIPT_DIR / f"{country.lower()}_covid_data.csv"), index=False)
     else:
         print("No matching data found.")
+
+    # Fix dates
+    combined_df[DATE_COL] = pd.to_datetime(combined_df[DATE_COL])
     return combined_df
 
 

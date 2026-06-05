@@ -7,8 +7,7 @@ from forward_euler import evaluate_seir_parameters
 
 df = import_covid_data()
 
-# TODO: Find a good source for this
-sigma = 0.19
+sigma = 1/5.1
 
 N = 60_000_000
 I_init = 0.0015 * N
