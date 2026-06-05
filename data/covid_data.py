@@ -76,7 +76,6 @@ def import_covid_data(country="Italy", start_date="2020-01-22", end_date="2020-0
         combined_df[NEW_RECOVERIES_COL] = combined_df[TOTAL_RECOVERIES_COL].diff().fillna(0).astype(int)
 
         print(f"Successfully combined {country} data! Total rows: {len(combined_df)}")
-        print(combined_df)
         combined_df.to_csv(str(SCRIPT_DIR / f"{country.lower()}_covid_data.csv"), index=False)
     else:
         print("No matching data found.")

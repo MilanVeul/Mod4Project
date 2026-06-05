@@ -1,0 +1,55 @@
+from data.covid_data import import_covid_data, NEW_INFECTIONS_COL, NEW_RECOVERIES_COL, TOTAL_INFECTIONS_COL, TOTAL_RECOVERIES_COL, INFECTED_COL
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+
+df = import_covid_data()
+
+# plt.figure(figsize=(10, 6))
+# plt.plot(df["Date"], df[NEW_INFECTIONS_COL], marker="o", linestyle="-")
+# plt.title("Daily new infections in Italy")
+# plt.xlabel("Date")
+# plt.ylabel("Number of new infections")
+# plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.grid()
+# plt.savefig("diagrams/new_infections.png")
+
+# plt.figure(figsize=(10, 6))
+# plt.plot(df["Date"], df[NEW_RECOVERIES_COL], marker="o", linestyle="-")
+# plt.title("Daily new recoveries in Italy")
+# plt.xlabel("Date")
+# plt.ylabel("Number of new recoveries")
+# plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.grid()
+# plt.savefig("diagrams/new_recoveries.png")
+
+# plt.figure(figsize=(10, 6))
+# plt.plot(df["Date"], df[NEW_INFECTIONS_COL], marker="o", linestyle="-")
+# plt.plot(df["Date"], df[NEW_RECOVERIES_COL], marker="o", linestyle="-")
+# plt.title("Daily new infections and recoveries in Italy")
+# plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+# plt.xlabel("Date")
+# plt.ylabel("Number of cases")
+# plt.xticks(rotation=45)
+# plt.tight_layout()
+# plt.grid()
+# plt.legend(["New infections", "New recoveries"])
+# plt.savefig("diagrams/new_infections_and_recoveries.png")
+
+plt.figure(figsize=(10, 6))
+plt.plot(df["Date"], df[INFECTED_COL], marker="o", linestyle="-")
+plt.plot(df["Date"], df[TOTAL_RECOVERIES_COL], marker="o", linestyle="-")
+plt.title("Total infections and recoveries in Italy")
+plt.gca().xaxis.set_major_locator(mdates.MonthLocator())
+plt.xlabel("Date")
+plt.ylabel("Number of cases")
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.grid()
+plt.legend(["Total Infections", "Total recoveries"])
+plt.savefig("diagrams/total_infections_and_recoveries_covid.png")

@@ -1,4 +1,4 @@
-from seir_simulation import fit_seir_nelder_mead
+from seir_covid_minimization import fit_seir_nelder_mead
 from forward_euler import evaluate_seir_parameters
 from data.covid_data import import_covid_data, TOTAL_RECOVERIES_COL, INFECTED_COL, DATE_COL, NEW_INFECTIONS_COL
 from diff import derivative
