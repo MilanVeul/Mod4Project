@@ -5,11 +5,11 @@ from scipy.optimize import minimize
 from seir_covid_minimization import fit_seir_minimization
 import matplotlib.pyplot as plt
 
-def fit_sir_minimization(df):
+def fit_sir_minimization(df, train_fraction):
 
 
     N = 60_000_000
-    I_init = 0.0015 * N
+    I_init = 0.0023 * N
     R_init = 0.0
     S_init = N - I_init - R_init
 
@@ -19,7 +19,7 @@ def fit_sir_minimization(df):
 
     dt = 0.1
     duration = len(df)
-    train_duration = int(0.5 * len(df))
+    train_duration = int(train_fraction * len(df))
 
     train_infections = df[INFECTED_COL][:train_duration]
     train_recoveries = df[INFECTED_COL][:train_duration]
@@ -66,8 +66,8 @@ def fit_sir_minimization(df):
 if __name__ == "__main__":
     df = import_covid_data()
 
-    S_sir, I_sir, R_sir, beta_sir, gamma_sir, scale_sir = fit_sir_minimization(df)
-    S_seir, E_seir, I_seir, R_seir, beta_seir, gamma_seir, scale_seir = fit_seir_minimization(df)
+    S_sir, I_sir, R_sir, beta_sir, gamma_sir, scale_sir = fit_sir_minimization(df, 0.5)
+    S_seir, E_seir, I_seir, R_seir, beta_seir, gamma_seir, scale_seir = fit_seir_minimization(df, 0.5)
     print(f"\nActual peak infections   : {np.max(df[INFECTED_COL])} on {df[DATE_COL][np.argmax(df[INFECTED_COL])]}")
     print("SIR:")
     print(f"  beta={beta_sir:.4f}, gamma={gamma_sir:.4f}, scale={scale_sir:.5f}")

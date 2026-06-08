@@ -4,7 +4,7 @@ from data.covid_data import import_covid_data, INFECTED_COL, TOTAL_RECOVERIES_CO
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
-def fit_seir_minimization(df):
+def fit_seir_minimization(df, train_fraction):
 
     sigma = 1/5.1
 
@@ -20,7 +20,7 @@ def fit_seir_minimization(df):
 
     dt = 0.1
     duration = len(df)
-    train_duration = int(0.5 * len(df))
+    train_duration = int(train_fraction * len(df))
 
     train_infections = df[INFECTED_COL][:train_duration]
     train_recoveries = df[INFECTED_COL][:train_duration]
@@ -68,7 +68,7 @@ def fit_seir_minimization(df):
 if __name__ == "__main__":
     df = import_covid_data()
 
-    S, E, I, R, beta, gamma, sigma, scale = fit_seir_minimization(df)
+    S, E, I, R, beta, gamma, sigma, scale = fit_seir_minimization(df, 0.5)
     print(f"beta={beta:.4f}, gamma={gamma:.4f}, scale={scale:.5f}")
     print(f"Actual peak infections   : {np.max(df[INFECTED_COL])} on {df[DATE_COL][np.argmax(df[INFECTED_COL])]}")
     print(f"Simulated peak infections: {np.max(I)} on {df[DATE_COL][np.argmax(I)]}")
