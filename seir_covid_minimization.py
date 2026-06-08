@@ -20,13 +20,18 @@ def fit_seir_minimization(df):
 
     dt = 0.1
     duration = len(df)
+    train_duration = int(0.5 * len(df))
+
+    train_infections = df[INFECTED_COL][:train_duration]
+    train_recoveries = df[INFECTED_COL][:train_duration]
+
 
     def loss_function(params: np.ndarray) -> float:
         beta, gamma, scale = params
         
-        S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, duration) * scale
-        rmse_infections = np.sqrt(np.mean((df[INFECTED_COL] - I[::int(1 / dt)]) ** 2))
-        rmse_recoveries = np.sqrt(np.mean((df[TOTAL_RECOVERIES_COL] - R[::int(1 / dt)]) ** 2))
+        S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, train_duration) * scale
+        rmse_infections = np.sqrt(np.mean((train_infections - I[::int(1 / dt)]) ** 2))
+        rmse_recoveries = np.sqrt(np.mean((train_recoveries - R[::int(1 / dt)]) ** 2))
 
         loss = rmse_infections + rmse_recoveries
         print(f"loss infections={rmse_infections:.4f}, loss recoveries={rmse_recoveries:.4f} beta={beta}, gamma={gamma}, scale={scale}")
