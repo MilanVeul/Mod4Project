@@ -70,17 +70,19 @@ def print_rmse_model(df: pd.DataFrame, simulated_I: np.ndarray, simulated_R: np.
 if __name__ == "__main__":
     df = import_covid_data()
     dt = 0.1
-    train_ratio = 1
+    train_ratio = 0.35
 
     S_sir, I_sir, R_sir, beta_sir, gamma_sir, scale_sir = fit_sir_minimization(df, train_ratio, dt)
     S_seir, E_seir, I_seir, R_seir, beta_seir, gamma_seir, scale_seir = fit_seir_minimization(df, train_ratio, dt)
     print(f"\nActual peak infections   : {np.max(df[INFECTED_COL])} on {df[DATE_COL][np.argmax(df[INFECTED_COL])]}")
     print("SIR:")
     print(f"  beta={beta_sir:.4f}, gamma={gamma_sir:.4f}, scale={scale_sir:.5f}")
+    print(f"  R0 = {beta_sir / gamma_sir:.2f}")
     print(f"  Simulated peak infections: {np.max(I_sir)} on {df[DATE_COL][np.argmax(I_sir)]}")
     print_rmse_model(df, I_sir, R_sir)
     print("\nSEIR")
     print(f" beta={beta_seir:.4f}, gamma={gamma_seir:.4f}, scale={scale_seir:.5f}")
+    print(f"  R0 = {beta_seir / gamma_seir:.2f}")
     print(f"  Simulated peak infections: {np.max(I_seir)} on {df[DATE_COL][np.argmax(I_seir)]}")
     print_rmse_model(df, E_seir + I_seir, R_seir)
     
