@@ -70,7 +70,7 @@ def print_rmse_model(df: pd.DataFrame, simulated_I: np.ndarray, simulated_R: np.
 if __name__ == "__main__":
     df = import_covid_data()
     dt = 0.1
-    train_ratio = 0.35
+    train_ratio = 1
 
     S_sir, I_sir, R_sir, beta_sir, gamma_sir, scale_sir = fit_sir_minimization(df, train_ratio, dt)
     S_seir, E_seir, I_seir, R_seir, beta_seir, gamma_seir, scale_seir = fit_seir_minimization(df, train_ratio, dt)
@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     plt.figure(figsize=(10, 6))
     plt.plot(df[DATE_COL], df[INFECTED_COL], color="C0",  linestyle="-", linewidth=2)
-    plt.plot(df[DATE_COL], I_seir, color="C0", linestyle="--", linewidth=2)
+    plt.plot(df[DATE_COL], E_seir + I_seir, color="C0", linestyle="--", linewidth=2)
     plt.plot(df[DATE_COL], I_sir, color="C0", linestyle=":", linewidth=2)
     plt.plot(df[DATE_COL], df[TOTAL_RECOVERIES_COL], color="C1",  linestyle="-", linewidth=2)
     plt.plot(df[DATE_COL], R_seir, color="C1", linestyle="--", linewidth=2)
