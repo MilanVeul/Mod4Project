@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 from seir_covid_minimization import fit_seir_minimization
 import matplotlib.pyplot as plt
 
-def fit_sir_minimization(df, train_fraction):
+def fit_sir_minimization(df, train_fraction, dt):
 
 
     N = 60_000_000
@@ -17,12 +17,11 @@ def fit_sir_minimization(df, train_fraction):
     initial_gamma = 0.08
     initial_scale = 0.001
 
-    dt = 0.1
     duration = len(df)
     train_duration = int(train_fraction * len(df))
 
     train_infections = df[INFECTED_COL][:train_duration]
-    train_recoveries = df[INFECTED_COL][:train_duration]
+    train_recoveries = df[TOTAL_RECOVERIES_COL][:train_duration]
 
     def loss_function(params: np.ndarray) -> float:
         beta, gamma, scale = params
@@ -54,38 +53,48 @@ def fit_sir_minimization(df, train_fraction):
 
     beta, gamma, scale = result.x
 
-    S, I, R = forward_euler_sir(S_init, I_init, R_init, beta, gamma, dt, duration)
+    S, I, R = forward_euler_sir(S_init, I_init, R_init, beta, gamma, dt, duration) * scale
     # A, I_for_scale = df[INFECTED_COL], I[::int(1 / dt)]
     # scale = np.dot(A, I_for_scale) / (np.linalg.norm(I_for_scale) ** 2)
 
-    I, R = I[::int(1 / dt)], R[::int(1 / dt)]
+    S, I, R = S[::int(1 / dt)], I[::int(1 / dt)], R[::int(1 / dt)]
 
     return S, I, R, beta, gamma, scale
+
+def print_rmse_model(df: pd.DataFrame, simulated_I: np.ndarray, simulated_R: np.ndarray):
+    rmse_infections = np.sqrt(np.mean((df[INFECTED_COL] - simulated_I) ** 2))
+    rmse_recoveries = np.sqrt(np.mean((df[TOTAL_RECOVERIES_COL] - simulated_R) ** 2))
+    print(f"  RMSE={rmse_infections + rmse_recoveries}")
 
 # Comparison
 if __name__ == "__main__":
     df = import_covid_data()
+    dt = 0.1
+    train_ratio = 0.35
 
-    S_sir, I_sir, R_sir, beta_sir, gamma_sir, scale_sir = fit_sir_minimization(df, 0.5)
-    S_seir, E_seir, I_seir, R_seir, beta_seir, gamma_seir, scale_seir = fit_seir_minimization(df, 0.5)
+    S_sir, I_sir, R_sir, beta_sir, gamma_sir, scale_sir = fit_sir_minimization(df, train_ratio, dt)
+    S_seir, E_seir, I_seir, R_seir, beta_seir, gamma_seir, scale_seir = fit_seir_minimization(df, train_ratio, dt)
     print(f"\nActual peak infections   : {np.max(df[INFECTED_COL])} on {df[DATE_COL][np.argmax(df[INFECTED_COL])]}")
     print("SIR:")
     print(f"  beta={beta_sir:.4f}, gamma={gamma_sir:.4f}, scale={scale_sir:.5f}")
-    print(f"  Simulated peak infections: {np.max(I_sir) * scale_sir} on {df[DATE_COL][np.argmax(I_sir)]}")
+    print(f"  Simulated peak infections: {np.max(I_sir)} on {df[DATE_COL][np.argmax(I_sir)]}")
+    print_rmse_model(df, I_sir, R_sir)
     print("\nSEIR")
     print(f" beta={beta_seir:.4f}, gamma={gamma_seir:.4f}, scale={scale_seir:.5f}")
-    print(f"  Simulated peak infections: {np.max(I_seir) * scale_seir} on {df[DATE_COL][np.argmax(I_seir)]}")
+    print(f"  Simulated peak infections: {np.max(I_seir)} on {df[DATE_COL][np.argmax(I_seir)]}")
+    print_rmse_model(df, E_seir + I_seir, R_seir)
     
 
     plt.figure(figsize=(10, 6))
     plt.plot(df[DATE_COL], df[INFECTED_COL], color="C0",  linestyle="-", linewidth=2)
-    plt.plot(df[DATE_COL], I_seir * scale_seir, color="C0", linestyle="--", linewidth=2)
-    plt.plot(df[DATE_COL], I_sir * scale_sir, color="C0", linestyle=":", linewidth=2)
+    plt.plot(df[DATE_COL], I_seir, color="C0", linestyle="--", linewidth=2)
+    plt.plot(df[DATE_COL], I_sir, color="C0", linestyle=":", linewidth=2)
     plt.plot(df[DATE_COL], df[TOTAL_RECOVERIES_COL], color="C1",  linestyle="-", linewidth=2)
-    plt.plot(df[DATE_COL], R_seir * scale_seir, color="C1", linestyle="--", linewidth=2)
-    plt.plot(df[DATE_COL], R_sir * scale_sir, color="C1", linestyle=":", linewidth=2)
+    plt.plot(df[DATE_COL], R_seir, color="C1", linestyle="--", linewidth=2)
+    plt.plot(df[DATE_COL], R_sir, color="C1", linestyle=":", linewidth=2)
+    plt.axvline(df[DATE_COL][int(train_ratio * (len(df) - 1))], color="red", linestyle=":", linewidth=2)
     plt.legend(["Actual Infections", "Simulated Infections by SEIR", "Simulated Infections by SIR",
-                "Actual Recoveries", "Simulated Recoveries by SEIR", "Simulated Recoveries by SIR"])
+                "Actual Recoveries", "Simulated Recoveries by SEIR", "Simulated Recoveries by SIR", "Training boundary"])
     plt.title("Comparison of SEIR and SIR on Current Infections")
     plt.xlabel("Date")
     plt.ylabel("Current Infections")

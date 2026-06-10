@@ -4,7 +4,7 @@ from data.covid_data import import_covid_data, INFECTED_COL, TOTAL_RECOVERIES_CO
 from scipy.optimize import minimize
 import matplotlib.pyplot as plt
 
-def fit_seir_minimization(df, train_fraction):
+def fit_seir_minimization(df, train_fraction, dt):
 
     sigma = 1/5.1
 
@@ -18,19 +18,18 @@ def fit_seir_minimization(df, train_fraction):
     initial_gamma = 0.08
     initial_scale = 0.001
 
-    dt = 0.1
     duration = len(df)
     train_duration = int(train_fraction * len(df))
 
     train_infections = df[INFECTED_COL][:train_duration]
-    train_recoveries = df[INFECTED_COL][:train_duration]
+    train_recoveries = df[TOTAL_RECOVERIES_COL][:train_duration]
 
 
     def loss_function(params: np.ndarray) -> float:
         beta, gamma, scale = params
         
         S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, train_duration) * scale
-        rmse_infections = np.sqrt(np.mean((train_infections - I[::int(1 / dt)]) ** 2))
+        rmse_infections = np.sqrt(np.mean((train_infections - I[::int(1 / dt)] - E[::int(1 / dt)]) ** 2))
         rmse_recoveries = np.sqrt(np.mean((train_recoveries - R[::int(1 / dt)]) ** 2))
 
         loss = rmse_infections + rmse_recoveries
@@ -56,34 +55,11 @@ def fit_seir_minimization(df, train_fraction):
 
     beta, gamma, scale = result.x
 
-    S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, duration)
+    S, E, I, R = forward_euler_seir(S_init, E_init, I_init, R_init, beta, sigma, gamma, dt, duration) * scale
     # A, I_for_scale = df[INFECTED_COL], I[::int(1 / dt)]
     # scale = np.dot(A, I_for_scale) / (np.linalg.norm(I_for_scale) ** 2)
 
-    I, R = I[::int(1 / dt)], R[::int(1 / dt)]
+    S, I, R, E = S[::int(1 / dt)], I[::int(1 / dt)], R[::int(1 / dt)], E[::int(1 / dt)]
 
     return S, E, I, R, beta, gamma, scale
 
-
-if __name__ == "__main__":
-    df = import_covid_data()
-
-    S, E, I, R, beta, gamma, sigma, scale = fit_seir_minimization(df, 0.5)
-    print(f"beta={beta:.4f}, gamma={gamma:.4f}, scale={scale:.5f}")
-    print(f"Actual peak infections   : {np.max(df[INFECTED_COL])} on {df[DATE_COL][np.argmax(df[INFECTED_COL])]}")
-    print(f"Simulated peak infections: {np.max(I)} on {df[DATE_COL][np.argmax(I)]}")
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(df[DATE_COL], df[INFECTED_COL], color="C0",  linestyle="--", linewidth=2)
-    plt.plot(df[DATE_COL], I * scale, color="C0", linestyle="-", linewidth=2)
-    plt.plot(df[DATE_COL], df[TOTAL_RECOVERIES_COL], color="C1", linestyle="--", linewidth=2)
-    plt.plot(df[DATE_COL], R* scale, color="C1", linestyle="-", linewidth=2)
-    plt.legend(["Actual Infections", "Simulated Infections", "Actual Recoveries", "Simulated Recoveries"])
-    plt.title("SEIR Fit to Covid Data (Italy)")
-    plt.xlabel("Date")
-    plt.ylabel("Current Infections")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.grid()
-    plt.savefig("diagrams/seir_fit_covid.png")
-    print("Saved diagrams/seir_fit_covid.png", flush=True)
