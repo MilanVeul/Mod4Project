@@ -2,16 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from data.covid_data import import_covid_data
-from forward_euler import forward_euler_sir
+from forward_euler import forward_euler_sir, forward_euler_seir
 
-# TODO duration, scale factor, exposed
 
 # variables in both sir and seir
 sigma = 0.19
 N_init = 60_000_000
 R_init = 0
 dt = 0.1
-duration = 365
 
 # step/range of beta and gamma
 bt_step = 0.010
@@ -28,7 +26,7 @@ def init_ranges(beta, gamma):
     return B, G, Z, beta_range, gamma_range
 
 
-def sir_sensitivity(df):
+def sir_sensitivity(duration):
     I_init = 0.0023 * N_init
     S_init = N_init - I_init
 
@@ -41,12 +39,12 @@ def sir_sensitivity(df):
     # Fill Z matrix
     for i in range(len(gamma_range)):
         for j in range(len(beta_range)):
-            _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i,j], G[i,j], dt, duration)
+            _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i,j], G[i,j], dt, duration) * scale
             Z[i,j] = np.max(I)
 
     plot_3d(beta_range, gamma_range, Z, beta, gamma, "diagrams/sensitivity_sir.png")
 
-def seir_sensitivity(df):
+def seir_sensitivity(duration):
     E_init = 0.0008 * N_init
     I_init = 0.0015 * N_init
     S_init = N_init - I_init - E_init
@@ -60,7 +58,7 @@ def seir_sensitivity(df):
     # Fill Z matrix
     for i in range(len(gamma_range)):
         for j in range(len(beta_range)):
-            _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i,j], G[i,j], dt, duration)
+            _, _, I, _ = forward_euler_seir(S_init, E_init, I_init, R_init, B[i,j], sigma, G[i,j], dt, duration) * scale
             Z[i,j] = np.max(I)
 
     plot_3d(beta_range, gamma_range, Z, beta, gamma, "diagrams/sensitivity_seir.png")
@@ -86,7 +84,7 @@ def plot_3d(beta_range, gamma_range, Z, beta, gamma, path):
     scat = ax.scatter(beta, gamma, peak, color="red", s=100, marker="o", label="Estimation", alpha=1.0, zorder=999)
     scat.set_depthshade(False)
     ax.legend()
-    ax.view_init(elev=15, azim=45)
+    ax.view_init(elev=15, azim=75)
 
     plt.tight_layout()
     plt.savefig(path)
@@ -94,7 +92,6 @@ def plot_3d(beta_range, gamma_range, Z, beta, gamma, path):
 
 if __name__ == "__main__":
     df = import_covid_data()
-    sir_sensitivity(df)
-    seir_sensitivity(df)
-
-
+    train_duration = int(.35 * len(df))
+    sir_sensitivity(train_duration)
+    seir_sensitivity(train_duration)
