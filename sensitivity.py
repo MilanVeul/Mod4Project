@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from data.covid_data import import_covid_data
+from data.meridonia_data import import_meridonia_data
 from forward_euler import forward_euler_sir, forward_euler_seir
 
 
@@ -19,8 +20,10 @@ gm_rnge = 0.010
 
 
 def init_ranges(beta, gamma):
-    beta_range = np.arange(beta - bt_rnge, beta + bt_rnge + bt_step, bt_step)
-    gamma_range = np.arange(gamma - gm_rnge, gamma + gm_rnge + gm_step, gm_step)
+    beta_range = np.linspace(0.9 * beta, 1.10 * beta, num=21)
+    gamma_range = np.linspace(0.9 * gamma, 1.10 * gamma, num=21)
+    old_beta_range = np.arange(beta - bt_rnge, beta + bt_rnge + bt_step, bt_step)
+    old_gamma_range = np.arange(gamma - gm_rnge, gamma + gm_rnge + gm_step, gm_step)
     B, G = np.meshgrid(beta_range, gamma_range)
     Z = np.zeros(B.shape)
     return B, G, Z, beta_range, gamma_range
@@ -84,14 +87,41 @@ def plot_3d(beta_range, gamma_range, Z, beta, gamma, path):
     scat = ax.scatter(beta, gamma, peak, color="red", s=100, marker="o", label="Estimation", alpha=1.0, zorder=999)
     scat.set_depthshade(False)
     ax.legend()
-    ax.view_init(elev=15, azim=75)
+    ax.view_init(elev=15, azim=45)
 
     plt.tight_layout()
     plt.savefig(path)
     print(f"Figure saved to {path}")
+
+
+def sensitivity_meridonia():
+    dt = 0.1
+    N_init = 17_500_000
+    R_init = 0
+    I_init = 1
+    S_init = N_init - I_init
+
+    beta = 0.420
+    gamma = 0.265
+
+    step = 0.01
+
+    B, G, Z, beta_range, gamma_range = init_ranges(beta, gamma)
+    B, G = np.meshgrid(beta_range, gamma_range)
+    Z = np.zeros(B.shape)
+
+    # Fill Z matrix
+    for i in range(len(gamma_range)):
+        for j in range(len(beta_range)):
+            _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i, j], G[i, j], dt, 365)
+            Z[i, j] = np.max(I)
+
+    plot_3d(beta_range, gamma_range, Z, beta, gamma, "diagrams/sensitivity_meridonia.png")
+
 
 if __name__ == "__main__":
     df = import_covid_data()
     train_duration = int(.35 * len(df))
     sir_sensitivity(train_duration)
     seir_sensitivity(train_duration)
+    sensitivity_meridonia()
