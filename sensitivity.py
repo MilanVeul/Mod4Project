@@ -45,7 +45,7 @@ def sir_sensitivity(duration):
             _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i,j], G[i,j], dt, duration) * scale
             Z[i,j] = np.max(I)
 
-    plot_3d(beta_range, gamma_range, Z, beta, gamma, "diagrams/sensitivity_sir.png")
+    plot_3d(Z, beta, gamma, "diagrams/sensitivity_sir.png")
 
 def seir_sensitivity(duration):
     E_init = 0.0008 * N_init
@@ -64,11 +64,11 @@ def seir_sensitivity(duration):
             _, _, I, _ = forward_euler_seir(S_init, E_init, I_init, R_init, B[i,j], sigma, G[i,j], dt, duration) * scale
             Z[i,j] = np.max(I)
 
-    plot_3d(beta_range, gamma_range, Z, beta, gamma, "diagrams/sensitivity_seir.png")
+    plot_3d(Z, beta, gamma, "diagrams/sensitivity_seir.png")
 
 
-def plot_3d(beta_range, gamma_range, Z, beta, gamma, path):
-    B, G = np.meshgrid(beta_range, gamma_range)
+def plot_3d(Z, beta, gamma, path):
+    B, G, _, beta_range, gamma_range = init_ranges(beta, gamma)
 
     fig = plt.figure(figsize=(12, 8))
     ax = fig.add_subplot(111, projection="3d")
@@ -83,11 +83,29 @@ def plot_3d(beta_range, gamma_range, Z, beta, gamma, path):
     beta_idx = np.argmin(np.abs(beta_range - beta))
     gamma_idx = np.argmin(np.abs(gamma_range - gamma))
     peak = Z[gamma_idx, beta_idx]
-    print(peak)
+
+    # Gamma sensitivity
+    peak_gamma_high = Z[gamma_idx + 1, beta_idx]
+    peak_gamma_low = Z[gamma_idx - 1, beta_idx]
+    diff_gamma_high = (peak_gamma_high - peak) / peak * 100
+    diff_gamma_low = (peak_gamma_low - peak) / peak * 100
+
+    # Beta sensitivity
+    peak_beta_high = Z[gamma_idx, beta_idx + 1]
+    peak_beta_low = Z[gamma_idx, beta_idx - 1]
+    diff_beta_high = (peak_beta_high - peak) / peak * 100
+    diff_beta_low = (peak_beta_low - peak) / peak * 100
+    latex_table = f"""\\textbf{{Parameter}} & \\textbf{{+1\\% deviation}} & \\textbf{{-1\\% deviation}} \\\\ \\hline
+    $\\gamma$ & {diff_gamma_high:+.2f}\\% & {diff_gamma_low:+.2f}\\% \\\\
+    $\\beta$ & {diff_beta_high:+.2f}\\% & {diff_beta_low:+.2f}\\% \\\\ \\hline"""
+
+    print(latex_table)
+
+
     scat = ax.scatter(beta, gamma, peak, color="red", s=100, marker="o", label="Estimation", alpha=1.0, zorder=999)
     scat.set_depthshade(False)
     ax.legend()
-    ax.view_init(elev=15, azim=45)
+    ax.view_init(elev=15, azim=75)
 
     plt.tight_layout()
     plt.savefig(path)
@@ -104,7 +122,7 @@ def sensitivity_meridonia():
     beta = 0.420
     gamma = 0.265
 
-    step = 0.01
+    # step = 0.01
 
     B, G, Z, beta_range, gamma_range = init_ranges(beta, gamma)
     B, G = np.meshgrid(beta_range, gamma_range)
@@ -116,7 +134,7 @@ def sensitivity_meridonia():
             _, I, _ = forward_euler_sir(S_init, I_init, R_init, B[i, j], G[i, j], dt, 365)
             Z[i, j] = np.max(I)
 
-    plot_3d(beta_range, gamma_range, Z, beta, gamma, "diagrams/sensitivity_meridonia.png")
+    plot_3d(Z, beta, gamma, "diagrams/sensitivity_meridonia.png")
 
 
 if __name__ == "__main__":
